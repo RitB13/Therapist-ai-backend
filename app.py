@@ -19,7 +19,7 @@ app.add_middleware(
 
 # Load model and retriever once
 llm_pipeline = load_llm()
-retriever = get_retriever()
+# retriever = get_retriever()
 chat_history = few_shot_examples.strip()
 
 # Ensure logs folder exists
