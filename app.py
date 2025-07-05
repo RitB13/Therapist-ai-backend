@@ -17,42 +17,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load model and retriever once
+# ✅ Load model once
 llm_pipeline = load_llm()
-# retriever = get_retriever()
 chat_history = few_shot_examples.strip()
 
-# Ensure logs folder exists
+# ✅ Ensure logs folder exists
 os.makedirs("logs", exist_ok=True)
 
-# Request schema
+# ✅ Define request schema
 class ChatInput(BaseModel):
     user_input: str
 
+# ✅ Define POST endpoint
 @app.post("/chat")
 async def chat(input_data: ChatInput):
     global chat_history
 
     user_input = input_data.user_input
 
-    # RAG Retrieval
-    relevant_docs = retriever.invoke(user_input)  # ✅ Replaces deprecated get_relevant_documents
+    # ✅ Initialize retriever here (on-demand)
+    retriever = get_retriever()
+
+    # ✅ Retrieve relevant knowledge
+    relevant_docs = retriever.invoke(user_input)
     retrieved_knowledge = "\n".join([doc.page_content for doc in relevant_docs])
     rag_context = f"Helpful therapeutic information:\n{retrieved_knowledge}"
 
-    # Final Prompt Construction
+    # ✅ Construct prompt
     full_input = f"{rag_context}\n\n{chat_history}\nUser: {user_input}\nTherapist:"
 
-    # LLM Response (Groq returns plain string)
+    # ✅ LLM Response
     response = llm_pipeline.invoke(full_input)
 
-    # Optional: Clean up response if it repeats the prefix
+    # ✅ Clean response if needed
     if "Therapist:" in response:
         response = response.split("Therapist:")[-1].strip()
 
-    # Update History
+    # ✅ Update chat history
     chat_history += f"\nUser: {user_input}\nTherapist: {response}"
 
+    # ✅ Log history to file
     with open("logs/chat_history.txt", "a") as f:
         f.write(f"\nUser: {user_input}\nTherapist: {response}\n")
 
