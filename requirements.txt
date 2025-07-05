@@ -9,4 +9,3 @@ transformers
 torch
 python-dotenv
 requests
-python_version >= "3.10"
